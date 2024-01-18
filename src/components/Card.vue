@@ -1,9 +1,8 @@
 <script setup>
-import {computed} from "vue";
-
 defineProps({
-  imageUrl: String,
+  id: Number,
   title: String,
+  imageUrl: String,
   price: Number,
   isFavorite: Boolean,
   isAdded: Boolean,
