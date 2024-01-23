@@ -256,6 +256,9 @@ body {
     top: 2rem;
     left: 2rem;
 }
+.card_image{
+    width: 100%;
+}
 .card__title{
     margin-top: 0.5rem; /* 8px */
 }

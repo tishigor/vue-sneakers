@@ -19,7 +19,7 @@ defineProps({
         alt="Like 1"
         class="card__like"
     />
-    <img :src="imageUrl" alt="Sneaker"/>
+    <img class="card_image" :src="imageUrl" alt="Sneaker"/>
 
     <p class="card__title">{{ title }}</p>
 
