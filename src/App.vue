@@ -1,20 +1,79 @@
 <script setup>
 import axios from "axios";
-import {onMounted, ref, reactive, watch, provide} from "vue";
+import {onMounted, ref, reactive, watch, provide, computed} from "vue";
 import Increment from './components/Increment.vue'
 import Header from "@/components/Header.vue";
 import CardList from "@/components/CardList.vue";
+import Drawer from "@/components/Drawer.vue";
 
 const items = ref([]);
+const cart = ref([]);
+const isCreatingOrder = ref(false);
+
+
+const drawerOpen = ref(false);
+
+const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.price, 0));
+const vatPrice = computed(() => Math.round((totalPrice.value * 5) / 100));
+
+const cartIsEmpty = computed(() => cart.value.length === 0)
+const cartButtonDisabled = computed(() => isCreatingOrder.value || cartIsEmpty.value)
+
+
+const closeDrawer = () => {
+  drawerOpen.value = false;
+}
+
+const openDrawer = () => {
+  drawerOpen.value = true;
+}
 
 const filters = reactive({
   sortBy: 'title',
   searchQuery: '',
 })
 
+const addToCart = (item) => {
+  cart.value.push(item);
+  item.isAdded = true;
+}
+
+const removeFromCart = (item) => {
+  cart.value.splice(cart.value.indexOf(item), 1);
+  item.isAdded = false;
+}
+
+const createOrder = async () => {
+  try {
+    isCreatingOrder.value = true;
+    const {data} = await axios.post(`https://5324a7cf8080ae0b.mokky.dev/orders`, {
+      items: cart.value,
+      totalPrice: totalPrice.value,
+    })
+
+    cart.value = [];
+
+
+    return data;
+  } catch (err) {
+    console.log(err)
+  } finally {
+    isCreatingOrder.value = false;
+  }
+}
+
+const onClickAddPlus = (item) => {
+  if (!item.isAdded) {
+    addToCart(item)
+  } else {
+    removeFromCart(item)
+  }
+}
+
 const onChangeSelect = (event) => {
   filters.sortBy = event.target.value
 }
+
 // todo сделать ожидание полного изменения инпута, и только после этого отправлять запрос
 const onChangeSearch = (event) => {
   filters.searchQuery = event.target.value
@@ -42,26 +101,25 @@ const fetchFavorites = async () => {
 
 const addToFavorite = async (item) => {
   try {
-    if (!item.isFavorite){
+    if (!item.isFavorite) {
 
-    const obj = {
-      parentId: item.id
-    };
+      const obj = {
+        parentId: item.id
+      };
 
-    item.isFavorite = true
+      item.isFavorite = true
 
-    const { data } = await axios.post(`https://5324a7cf8080ae0b.mokky.dev/favorites`, obj)
+      const {data} = await axios.post(`https://5324a7cf8080ae0b.mokky.dev/favorites`, obj)
 
-    item.favoriteId = data.id
-    console.log(data)
+      item.favoriteId = data.id
+      console.log(data)
     } else {
 
       item.isFavorite = false
       await axios.delete(`https://5324a7cf8080ae0b.mokky.dev/favorites/${item.favoriteId}`)
       item.favoriteId = null
     }
-  }
-  catch (err) {
+  } catch (err) {
     console.log(err)
   }
 
@@ -91,21 +149,52 @@ const fetchItems = async () => {
 }
 
 onMounted(async () => {
+  // todo Так себе работает. Почистил кэш и первоначальный запрос не выполнится.
+  const localCart = localStorage.getItem('cart');
+  cart.value = localCart ? JSON.parse(localCart) : [];
+
   await fetchItems();
   await fetchFavorites();
 });
 watch(filters, fetchItems);
 
+// Следим за изменением самого value корзины, а не содержимого корзины. Если хотим следить за содержимым, то пишем deep: true после функции
+watch(cart, () => {
+  items.value = items.value.map((item) => ({
+    ...item,
+    isAdded: false,
+  }))
+});
+
+watch(cart, () =>
+    {
+      localStorage.setItem('cart', JSON.stringify(cart.value))
+    },
+    { deep: true }
+);
+
 // Объявляю provide в родительских компонентах и далее в дочерних он будет нам доступен. Это нужно для избежания prop drilling
-// В данном случае это не нужно, использовал просто для проверки работы provide, inject
-provide('addToFavorite', addToFavorite)
+provide('cart', {
+  cart,
+  closeDrawer,
+  openDrawer,
+  addToCart,
+  removeFromCart
+})
 </script>
 
 <template>
-  <!--  <Drawer/>-->
+  <Drawer
+      v-if="drawerOpen"
+      :total-price="totalPrice"
+      :vat-price="vatPrice"
+      @create-order="createOrder"
+      :button-disabled="cartButtonDisabled"
+  />
   <div class="wrapper">
-    <Header/>
-
+    <Header
+        :total-price="totalPrice"
+        @open-drawer="openDrawer"/>
 
     <div class="sneakers">
       <div class="sneakers__header">
@@ -133,7 +222,7 @@ provide('addToFavorite', addToFavorite)
       </div>
 
       <div class="sneakers__list">
-        <CardList :items="items" @addToFavorite="addToFavorite"/>
+        <CardList :items="items" @add-to-favorite="addToFavorite" @add-to-cart="onClickAddPlus"/>
       </div>
     </div>
   </div>

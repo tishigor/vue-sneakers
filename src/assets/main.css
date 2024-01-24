@@ -1,6 +1,26 @@
 body {
     background-color: beige;
 }
+.info-block{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 18rem;
+    margin-left: auto;
+    margin-right: auto
+}
+.info-block__header{
+    margin-top: 1rem; /* 16px */
+    font-size: 1.5rem; /* 24px */
+    line-height: 2rem; /* 32px */
+    font-weight: 500;
+}
+.info-block__paragraph{
+    color: rgb(156 163 175);
+    margin-top: 0.5rem; /* 8px */
+}
+
 .drawer{
     position: fixed;
     top: 0;
@@ -67,6 +87,13 @@ body {
 .drawer__block__cart-item__text{
     display: flex;
     flex-direction: column;
+    /*todo что это?         для того чтобы крестик отлетал на одно и тоже расстояние*/
+    flex: 1 1 0%;
+}
+.drawer__block__cart-item__text__price-line__price{
+    /*todo это ничего не делает*/
+    /*попробуй сравнить работу с чужим примером*/
+    flex: 1 1 0%;
 }
 .drawer__block__cart-item__text__price-line{
     display: flex;
@@ -83,6 +110,12 @@ body {
     transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
+}
+
+.drawer__block__empty{
+    display: flex;
+    height: 100%;
+    align-items: center;
 }
 
 .drawer__block__total{

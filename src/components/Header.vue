@@ -1,4 +1,9 @@
 <script setup>
+const emit = defineEmits(['openDrawer']);
+
+defineProps({
+  totalPrice: Number,
+})
 
 </script>
 
@@ -14,9 +19,9 @@
     </div>
 
     <ul class="header__right-side">
-      <li class="header__right-side__item">
+      <li @click="() => emit('openDrawer')" class="header__right-side__item">
         <img src="/cart.svg" alt="Cart"/>
-        <b>1205 руб.</b>
+        <b>{{ totalPrice }} руб.</b>
       </li>
 
       <li class="header__right-side__item">
