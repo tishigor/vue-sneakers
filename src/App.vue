@@ -1,15 +1,13 @@
 <script setup>
-import axios from "axios";
-import {onMounted, ref, reactive, watch, provide, computed} from "vue";
+import { ref, watch, provide, computed} from "vue";
 import Increment from './components/Increment.vue'
 import Header from "@/components/Header.vue";
-import CardList from "@/components/CardList.vue";
 import Drawer from "@/components/Drawer.vue";
+import Home from "@/pages/Home.vue";
 
-const items = ref([]);
+// Корзина (start)
 const cart = ref([]);
 const isCreatingOrder = ref(false);
-
 
 const drawerOpen = ref(false);
 
@@ -27,11 +25,6 @@ const closeDrawer = () => {
 const openDrawer = () => {
   drawerOpen.value = true;
 }
-
-const filters = reactive({
-  sortBy: 'title',
-  searchQuery: '',
-})
 
 const addToCart = (item) => {
   cart.value.push(item);
@@ -62,112 +55,9 @@ const createOrder = async () => {
   }
 }
 
-const onClickAddPlus = (item) => {
-  if (!item.isAdded) {
-    addToCart(item)
-  } else {
-    removeFromCart(item)
-  }
-}
-
-const onChangeSelect = (event) => {
-  filters.sortBy = event.target.value
-}
-
-// todo сделать ожидание полного изменения инпута, и только после этого отправлять запрос
-const onChangeSearch = (event) => {
-  filters.searchQuery = event.target.value
-}
-
-// запрашивает список закладок
-const fetchFavorites = async () => {
-  try {
-    const {data: favorites} = await axios.get(`https://5324a7cf8080ae0b.mokky.dev/favorites`)
-    items.value = items.value.map((item) => {
-      const favorite = favorites.find((favorite) => favorite.parentId === item.id)
-      if (!favorite) {
-        return item;
-      }
-      return {
-        ...item,
-        isFavorite: true,
-        favoriteId: favorite.id,
-      }
-    })
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-const addToFavorite = async (item) => {
-  try {
-    if (!item.isFavorite) {
-
-      const obj = {
-        parentId: item.id
-      };
-
-      item.isFavorite = true
-
-      const {data} = await axios.post(`https://5324a7cf8080ae0b.mokky.dev/favorites`, obj)
-
-      item.favoriteId = data.id
-      console.log(data)
-    } else {
-
-      item.isFavorite = false
-      await axios.delete(`https://5324a7cf8080ae0b.mokky.dev/favorites/${item.favoriteId}`)
-      item.favoriteId = null
-    }
-  } catch (err) {
-    console.log(err)
-  }
-
-  console.log()
-}
-
-// запрашиваем список товаров
-const fetchItems = async () => {
-  try {
-    const params = {
-      sortBy: filters.sortBy,
-    };
-    if (filters.searchQuery) {
-      params.title = `*${filters.searchQuery}*`;
-    }
-    const {data} = await axios.get(`https://604781a0efa572c1.mokky.dev/items`,
-        {params})
-    items.value = data.map((obj) => ({
-      ...obj,
-      isFavorite: false,
-      favoriteId: null,
-      isAdded: false,
-    }))
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-onMounted(async () => {
-  // todo Так себе работает. Почистил кэш и первоначальный запрос не выполнится.
-  const localCart = localStorage.getItem('cart');
-  cart.value = localCart ? JSON.parse(localCart) : [];
-
-  await fetchItems();
-  await fetchFavorites();
-});
-watch(filters, fetchItems);
-
-// Следим за изменением самого value корзины, а не содержимого корзины. Если хотим следить за содержимым, то пишем deep: true после функции
-watch(cart, () => {
-  items.value = items.value.map((item) => ({
-    ...item,
-    isAdded: false,
-  }))
-});
-
-watch(cart, () =>
-    {
+watch(
+    cart,
+    () => {
       localStorage.setItem('cart', JSON.stringify(cart.value))
     },
     { deep: true }
@@ -181,6 +71,7 @@ provide('cart', {
   addToCart,
   removeFromCart
 })
+// Корзина (end)
 </script>
 
 <template>
@@ -192,40 +83,15 @@ provide('cart', {
       :button-disabled="cartButtonDisabled"
   />
   <div class="wrapper">
-    <Header
-        :total-price="totalPrice"
-        @open-drawer="openDrawer"/>
+    <Header :total-price="totalPrice" @open-drawer="openDrawer"/>
 
     <div class="sneakers">
-      <div class="sneakers__header">
-        <h2 class="sneakers__header__name">Все кроссовки</h2>
-
-        <div class="sneakers__header__right-side">
-          <select @change="onChangeSelect" class="sneakers__header__right-side__select">
-            <option value="name">По названию</option>
-            <option value="price">По цене (дешевые)</option>
-            <option value="-price">По цене (дорогие)</option>
-          </select>
-
-
-          <div class="sneakers__header__right-side__search">
-            <img class="sneakers__header__right-side__search__icon" src="/search.svg"/>
-            <input
-                @change="onChangeSearch"
-                class="sneakers__header__right-side__search__input"
-                type="text"
-                placeholder="Поиск..."
-            >
-          </div>
-        </div>
-
-      </div>
-
-      <div class="sneakers__list">
-        <CardList :items="items" @add-to-favorite="addToFavorite" @add-to-cart="onClickAddPlus"/>
-      </div>
+      <router-view></router-view>
     </div>
   </div>
+
+
   <Increment/>
+
 </template>
 

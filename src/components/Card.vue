@@ -1,5 +1,5 @@
 <script setup>
-defineProps({
+const props = defineProps({
   id: Number,
   title: String,
   imageUrl: String,
@@ -14,6 +14,7 @@ defineProps({
 <template>
   <div class="card">
     <img
+        v-if="onClickFavorite"
         @click="onClickFavorite"
         :src="!isFavorite ? '/like-1.svg' : '/like-2.svg'"
         alt="Like 1"
@@ -29,6 +30,7 @@ defineProps({
         <b>{{ price }} руб.</b>
       </div>
       <img
+          v-if="onClickAdd"
           @click="onClickAdd"
           :src="!isAdded ? '/plus.svg' : '/checked.svg'"
           alt="Plus"
