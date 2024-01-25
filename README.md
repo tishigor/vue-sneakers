@@ -1,4 +1,4 @@
-Хочу добавить стили sass. Настроить eslinrc.
+Настроить eslinrc в проекте
 
 # vue-sneakers
 
