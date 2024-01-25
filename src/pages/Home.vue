@@ -7,7 +7,6 @@ const { cart, addToCart, removeFromCart } = inject('cart');
 
 const items = ref([]);
 
-
 const filters = reactive({
   sortBy: 'title',
   searchQuery: '',
@@ -26,6 +25,7 @@ const onChangeSelect = (event) => {
 }
 
 // todo сделать ожидание полного изменения инпута, и только после этого отправлять запрос
+// todo разобраться почему сейчас отправляется запрос только при нажатии return
 const onChangeSearch = (event) => {
   filters.searchQuery = event.target.value
 }
@@ -51,11 +51,10 @@ const addToFavorite = async (item) => {
   } catch (err) {
     console.log(err)
   }
-
   console.log()
 }
 
-// запрашивает список закладок
+// запрашиваем список закладок
 const fetchFavorites = async () => {
   try {
     const {data: favorites} = await axios.get(`https://5324a7cf8080ae0b.mokky.dev/favorites`)
@@ -99,7 +98,6 @@ const fetchItems = async () => {
 
 
 onMounted(async () => {
-  // todo Так себе работает. Почистил кэш и первоначальный запрос не выполнится.
   const localCart = localStorage.getItem('cart');
   cart.value = localCart ? JSON.parse(localCart) : [];
 
@@ -133,7 +131,6 @@ watch(filters, fetchItems);
         <option value="price">По цене (дешевые)</option>
         <option value="-price">По цене (дорогие)</option>
       </select>
-
 
       <div class="sneakers__header__right-side__search">
         <img class="sneakers__header__right-side__search__icon" src="/search.svg"/>

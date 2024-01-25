@@ -1,4 +1,5 @@
-# 7:13:35
+Хочу добавить стили sass. Настроить eslinrc.
+
 # vue-sneakers
 
 This template should help get you started developing with Vue 3 in Vite.
